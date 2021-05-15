@@ -1,17 +1,11 @@
 import CreateDataContext from "./CreateDataContext";
+import jsonServer from "../api/JsonServer";
 
 const blogReducer = (state, acction) => {
   // console.log(acction);
   switch (acction.type) {
-    case "add_post":
-      return [
-        ...state,
-        {
-          id: Date.now(),
-          title: acction.payload.title,
-          description: acction.payload.description,
-        },
-      ];
+    case "get_posts":
+      return acction.payload;
     case "delete_post":
       return state.filter((post) => post.id !== acction.payload);
     case "edit_post":
@@ -24,9 +18,17 @@ const blogReducer = (state, acction) => {
   }
 };
 
+const getPosts = (dispatch) => {
+  return async () => {
+    const response = await jsonServer.get("blogposts");
+    dispatch({ type: "get_posts", payload: response.data });
+  };
+};
+
 const addPost = (dispatch) => {
-  return (title, description, callback) => {
-    dispatch({ type: "add_post", payload: { title, description } });
+  return async (title, description, callback) => {
+    await jsonServer.post("blogposts", { title, description }); //when i same param and var we can avoid if no have to be: name:text
+
     //here return success
     if (callback) {
       callback();
@@ -36,13 +38,16 @@ const addPost = (dispatch) => {
 };
 
 const deletePost = (dispatch) => {
-  return (id) => {
+  return async (id) => {
+    await jsonServer.delete(`blogposts/${id}`);
     dispatch({ type: "delete_post", payload: id });
   };
 };
 
 const editPost = (dispatch) => {
-  return (id, title, description, callback) => {
+  return async (id, title, description, callback) => {
+    await jsonServer.put(`blogposts/${id}`, { title, description });
+
     dispatch({ type: "edit_post", payload: { id, title, description } });
     //here return success
     if (callback) {
@@ -52,6 +57,6 @@ const editPost = (dispatch) => {
 };
 export const { Context, Provider } = CreateDataContext(
   blogReducer,
-  { addPost, deletePost, editPost },
-  [{ id: Date.now(), title: "ENV Post", description: "Just env test" }] //this is default only for env, we most leave empty on prod
+  { getPosts, addPost, deletePost, editPost },
+  []
 );

@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import React, { useContext, useEffect } from "react";
 import {
   StyleSheet,
   Text,
@@ -9,7 +9,20 @@ import {
 import { Context } from "../Context/BlogContext";
 import { Feather } from "@expo/vector-icons";
 const IndexScreen = ({ navigation }) => {
-  const { state, deletePost } = useContext(Context);
+  const { state, deletePost, getPosts } = useContext(Context);
+
+  //to call just one time
+  useEffect(() => {
+    getPosts();
+    //each time we back to index screen we most refresh the results
+    const listener = navigation.addListener("didFocus", () => {
+      getPosts();
+    });
+    //after show we most clean the listener, this run after end all
+    return () => {
+      listener.remove();
+    };
+  }, []);
 
   return (
     <View>
